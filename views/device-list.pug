@@ -1,0 +1,28 @@
+extends core/sidebar
+
+block append head
+  title Device List
+
+  link(rel='import', href='/public/polymers/device-card.html')
+
+block content
+  div.row
+    div.col-md-12
+      h1 Device List
+
+      div#device-list
+
+
+block footer
+  script.
+    $(document).ready(function() {
+      $.ajax('/api/v1/devices', {
+        success: function(data) {
+          data.forEach(function(device) {
+            var ele = document.createElement('device-card');
+            ele.device = device;
+            $("#device-list").append(ele);
+          });
+        }
+      })
+    });

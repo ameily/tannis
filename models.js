@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 var UserSchema = mongoose.Schema({
   name: String
 });
-var User = mongoose.Model('users', UserSchema);
+exports.User = mongoose.model('users', UserSchema);
 
 
 var DeviceTemplateSchema = mongoose.Schema({
@@ -36,7 +36,7 @@ var DeviceTemplateSchema = mongoose.Schema({
     regexPattern: String
   }]
 });
-var DeviceTemplate = mongoose.Model('device_templates', DeviceTemplateSchema);
+exports.DeviceTemplate = mongoose.model('device_templates', DeviceTemplateSchema);
 
 var DeviceSchema = mongoose.Schema({
   name: String,
@@ -58,8 +58,10 @@ var DeviceSchema = mongoose.Schema({
   }],
   changelog: [Object]
 });
-var Device = mongoose.Model('devices', DeviceSchema);
+exports.Device = mongoose.model('devices', DeviceSchema);
 
+
+/*
 var DefaultDeviceTemplates = [
   new DeviceTemplate({
     name: "Computer",
@@ -104,4 +106,4 @@ var DefaultDeviceTemplates = [
     name: "Generic Device"
   })
 ]
-
+*/

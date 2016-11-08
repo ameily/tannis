@@ -1,10 +1,14 @@
 
 var router = require('express').Router();
+var ObjectId = require('mongoose').Types.ObjectId;
+var models = require('../../models');
 
 function getDevices(userId, deviceId, res) {
-  var q = {
-    ownerId: ObjectId(userId)
-  };
+  var q = {};
+
+  if(userId) {
+    q.ownerId = ObjectId(userId);
+  }
 
   if(!res) {
     res = deviceId;
@@ -53,7 +57,7 @@ router.get('/device-templates/:templateId', function(req, res) {
 
 router.get('/devices', function(req, res) {
   //TODO only get current user's devices
-  var userId = ""; //TODO current user id
+  var userId = null; //TODO current user id
   getDevices(userId, res);
 });
 

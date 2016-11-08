@@ -8,7 +8,7 @@
 
 
     <div class='card card-default' style$="{{getCardStyle(device)}}">
-      <div class$='card-heading {{getHeadingClass(device)}}' on-tap="{{toggle}}">
+      <div class$='card-heading {{getHeadingClass(device)}}' on-tap="toggle">
         <h2>
           {{device.name}}
         </h2>
@@ -102,7 +102,7 @@
 
       toggle: function() {
         var device = this.get('device');
-        if(!hasFields(device)) {
+        if(!this.hasFields(device)) {
           return;
         }
 
@@ -111,7 +111,7 @@
           $(Polymer.dom(this.$['device-fields'])).slideUp();
         } else {
           $(Polymer.dom(this.$['device-fields'])).slideDown();
-          loadChildDevices();
+          this.loadChildren();
         }
 
         this.set('active', !isActive);
@@ -126,7 +126,7 @@
 
         $.ajax(url, {
           success: function(data) {
-            self.set('children', data);
+            self.set('childDevices', data);
             self.set('loadChildDevices', false);
           }
         });
