@@ -1,0 +1,157 @@
+<dom-module id='device-card'>
+  <template>
+    <style>
+      .card-heading.expandable {
+        cursor: pointer;
+      }
+    </style>
+
+
+    <div class='card card-default' style$="{{getCardStyle(device)}}">
+      <div class$='card-heading {{getHeadingClass(device)}}' on-tap="{{toggle}}">
+        <h2>
+          {{device.name}}
+        </h2>
+        <div hidden$="{{!owner}}">
+          <a href$="{{getOwnerUrl(owner)}}">@{{owner}}</a>
+        </div>
+      </div>
+      <template is='dom-if' if="{{hasFields(device)}}">
+        <table class='table' style="display:none" id='device-fields'>
+          <tbody>
+            <template is='dom-if' if="{{device.macAddress}}">
+              <tr>
+                <th>MAC Address</th>
+                <td><code>{{device.macAddress}}</code></td>
+              </tr>
+            </template>
+            <template is="dom-if" if="{{device.manufacturer}}">
+              <tr>
+                <th>Model</th>
+                <td>{{device.manufacturer}} {{device.model}}</td>
+              </tr>
+            </template>
+            <template is='dom-if' if='{{device.serialNumber}}'>
+              <tr>
+                <th>Serial Number</th>
+                <td><code>{{device.serialNumber}}</code></td>
+              </tr>
+            </template>
+            <template is='dom-if' if="{{device.companyTag}}">
+              <tr>
+                <th>Company Tag</th>
+                <td><span class='label label-primary'>{{device.companyTag}}</span></td>
+              </tr>
+            </template>
+
+            <template is='dom-repeat' items="{{device.customFields}}">
+              <tr>
+                <th>{{item.name}}</th>
+                <td>{{item.value}}</td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </template>
+      <template is='dom-if' if="{{device.isContainer}}">
+        <h3>Child Devices</h3>
+        <div class='text-center'>
+          <paper-spinner active="{{loadChildDevices}}"></paper-spinner>
+        </div>
+
+        <template is='dom-repeat' items="{{childDevices}}">
+          <device-card device="{{item}}" owner="{{owner}}"></device-card>
+        </template>
+        <button class='btn btn-block btn-success' on-tap="{{addChildDevice}}">
+          <span class='glyphicon glyphicon-plus-sign'></span>
+          Add Device
+        </button>
+      </template>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'device-card',
+      properties: {
+        device: {
+          type: Object,
+          value: null
+        },
+        active: Boolean,
+        owner: {
+          type: Object,
+          value: null
+        },
+        childDevices: {
+          type: Array,
+          value: function() {
+            return [];
+          }
+        },
+        loadChildDevices: Boolean
+      },
+
+      getOwnerUrl: function(owner) {
+        return owner ? "/users/" + owner.id : "javascript:void(0)";
+      },
+
+      getHeadingClass: function(device) {
+        return this.hasFields(device) || (device && device.isContainer) ? "expandable" : "";
+      },
+
+      toggle: function() {
+        var device = this.get('device');
+        if(!hasFields(device)) {
+          return;
+        }
+
+        var isActive = this.get('active');
+        if(isActive) {
+          $(Polymer.dom(this.$['device-fields'])).slideUp();
+        } else {
+          $(Polymer.dom(this.$['device-fields'])).slideDown();
+          loadChildDevices();
+        }
+
+        this.set('active', !isActive);
+      },
+
+      loadChildren: function() {
+        var self = this;
+        var url = "/api/v1/devices/" + this.get('device')._id + "/children";
+
+        this.set('childDevices', []);
+        this.set('loadChildDevices', true);
+
+        $.ajax(url, {
+          success: function(data) {
+            self.set('children', data);
+            self.set('loadChildDevices', false);
+          }
+        });
+      },
+
+      hasFields: function(device) {
+        if(device) {
+          return (!!device.macAddress || !!device.serialNumber ||
+                  !!device.manufacturer || !!device.model ||
+                  !!device.companyTag || !!device.customFields.length);
+        } else {
+          return false;
+        }
+      },
+
+      getCardStyle: function(device) {
+        var style = "";
+        if(device && device.color) {
+          style = "border: 1px solid " + device.color;
+        }
+        return style;
+      },
+
+      addChildDevice: function() {
+      }
+    })
+  </script>
+</dom-module>

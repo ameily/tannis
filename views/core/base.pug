@@ -1,0 +1,29 @@
+doctype html
+html
+  head
+    link(rel='stylesheet', href='/bower_components/bootstrap/dist/css/boostrap.min.css')
+    link(rel='import', href='/bower_components/polymer/polymer-micro.html')
+    link(rel='stylesheet', href='/public/css/core.css')
+    link(rel='stylesheet', href='/bower_components/paper-spinner/paper-spinner.html')
+    block head
+      title Met&yuml;l
+
+  body
+    nav.navbar.navbar-default
+      div.container-fluid
+        div.navbar-header
+          button.navbar-toggle.collapsed(data-toggle='collapse', data-target='#navbar-collapse')
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+          a.navbar-brand(href="/") Met&yuml;l
+
+        div#navbar-collapse.collapse.navbar-collapse
+          ul.nav.navbar-nav
+
+    div.container-fluid
+      block body
+
+    script(src='/bower_components/jquery/dist/jquery.min.js')
+    script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js')
+    block footer

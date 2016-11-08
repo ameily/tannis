@@ -1,0 +1,32 @@
+extends core/base.pug
+
+block head
+  style.
+    #sidebar-pane, #content-pane {
+      overflow-y: auto;
+    }
+
+    #sidebar-pane {
+      border-right: 1px solid #aaa;
+    }
+
+block body
+  div.row
+    div.col-md-3#sidebar-pane
+      block sidebar
+    div.col-md-9#content-pane
+      block content
+
+
+block footer
+  script.
+    function onWindowResize() {
+      var height = $(window).height();
+      $('#sidebar-pane').height(height);
+      $('#content-pane').height(height);
+    }
+
+    $(document).ready(function() {
+      $(window).resize(onWindowResize);
+    });
+

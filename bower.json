@@ -1,0 +1,20 @@
+{
+  "name": "metyl",
+  "description": "",
+  "main": "index.js",
+  "license": "ISC",
+  "homepage": "https://github.com/ameily/tannis",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer#^1.7.0",
+    "bootstrap": "^3.3.7",
+    "paper-spinner": "^1.2.1"
+  }
+}
