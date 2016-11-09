@@ -1,50 +1,70 @@
 <dom-module id='device-card'>
   <template>
     <style>
-      .card-heading.expandable {
+      .card-content.expandable {
         cursor: pointer;
+      }
+
+      .company-tag {
+        font-size: 100%;
+        font-family: monospace;
+      }
+
+      .monospace {
+        font-family: monospace;
       }
     </style>
 
 
     <div class='card card-default' style$="{{getCardStyle(device)}}">
-      <div class$='card-heading {{getHeadingClass(device)}}' on-tap="toggle">
-        <h2>
+      <div class$='card-content {{getHeadingClass(device)}}' on-tap="toggle" style$="{{getHeadingStyle(device)}}">
+        <h3 class='card-title'>
           {{device.name}}
-        </h2>
+        </h3>
         <div hidden$="{{!owner}}">
           <a href$="{{getOwnerUrl(owner)}}">@{{owner}}</a>
         </div>
       </div>
-      <template is='dom-if' if="{{hasFields(device)}}">
-        <table class='table' style="display:none" id='device-fields'>
+      <div id='device-details' style='display: none'>
+        <!--<div class='card-content text-right'>
+          <div class='btn-group btn-group-xs'>
+            <a class='btn btn-danger' on-tap="{{unassign}}" href='javascript:void(0)'>
+              <span class='glyphicon glyphicon-remove-sign'></span>
+              Unassign
+            </a>
+          </div>
+        </div>-->
+
+        <!-- Device fields (mac address, manufacturer, etc.) -->
+        <table class='table table-hover' hidden$="{{!hasFields(device)}}">
           <tbody>
             <template is='dom-if' if="{{device.macAddress}}">
               <tr>
                 <th>MAC Address</th>
-                <td><code>{{device.macAddress}}</code></td>
+                <td><span class='monospace'>{{device.macAddress}}</span></td>
               </tr>
             </template>
             <template is="dom-if" if="{{device.manufacturer}}">
               <tr>
                 <th>Model</th>
-                <td>{{device.manufacturer}} {{device.model}}</td>
+                <td>{{device.manufacturer}} {{device.modelNumber}}</td>
               </tr>
             </template>
             <template is='dom-if' if='{{device.serialNumber}}'>
               <tr>
                 <th>Serial Number</th>
-                <td><code>{{device.serialNumber}}</code></td>
+                <td><span class='monospace'>{{device.serialNumber}}</span></td>
               </tr>
             </template>
             <template is='dom-if' if="{{device.companyTag}}">
               <tr>
                 <th>Company Tag</th>
-                <td><span class='label label-primary'>{{device.companyTag}}</span></td>
+                <td><span class='label label-default company-tag'>{{device.companyTag}}</span></td>
               </tr>
             </template>
 
             <template is='dom-repeat' items="{{device.customFields}}">
+              <!-- Custom fields -->
               <tr>
                 <th>{{item.name}}</th>
                 <td>{{item.value}}</td>
@@ -52,21 +72,27 @@
             </template>
           </tbody>
         </table>
-      </template>
-      <template is='dom-if' if="{{device.isContainer}}">
-        <h3>Child Devices</h3>
-        <div class='text-center'>
-          <paper-spinner active="{{loadChildDevices}}"></paper-spinner>
-        </div>
 
-        <template is='dom-repeat' items="{{childDevices}}">
-          <device-card device="{{item}}" owner="{{owner}}"></device-card>
+        <template is='dom-if' if="{{device.isContainer}}">
+          <div class='card-divider' hidden$='{{!hasFields(device)}}'></div>
+          <div class='card-content card-container'>
+            <!-- Child Devices -->
+            <h3 class='card-title' style='margin-bottom: 20px;'>Child Devices</h3>
+
+            <div class='text-center'>
+              <paper-spinner active="{{loading}}" hidden$="{{!loading}}"></paper-spinner>
+            </div>
+
+            <template is='dom-repeat' items="{{childDevices}}">
+              <device-card device="{{item}}" owner="{{owner}}"></device-card>
+            </template>
+            <button class='btn btn-block btn-default btn-lg' on-tap="{{addChildDevice}}">
+              <span class='glyphicon glyphicon-plus-sign'></span>
+              Add Child Device
+            </button>
+          </div>
         </template>
-        <button class='btn btn-block btn-success' on-tap="{{addChildDevice}}">
-          <span class='glyphicon glyphicon-plus-sign'></span>
-          Add Device
-        </button>
-      </template>
+      </div>
     </div>
   </template>
 
@@ -74,10 +100,7 @@
     Polymer({
       is: 'device-card',
       properties: {
-        device: {
-          type: Object,
-          value: null
-        },
+        device: Object,
         active: Boolean,
         owner: {
           type: Object,
@@ -89,7 +112,7 @@
             return [];
           }
         },
-        loadChildDevices: Boolean
+        loading: Boolean
       },
 
       getOwnerUrl: function(owner) {
@@ -108,45 +131,73 @@
 
         var isActive = this.get('active');
         if(isActive) {
-          $(Polymer.dom(this.$['device-fields'])).slideUp();
+          $(this.$['device-details']).slideUp();
         } else {
-          $(Polymer.dom(this.$['device-fields'])).slideDown();
-          this.loadChildren();
+          var self = this;
+
+          this.set('childDevices', []);
+          this.set('loading', true);
+
+          $(this.$['device-details']).slideDown(400, function() {
+            self.loadChildDevices();
+          });
+          //this.loadChildDevices();
         }
 
         this.set('active', !isActive);
       },
 
-      loadChildren: function() {
+      loadChildDevices: function() {
         var self = this;
         var url = "/api/v1/devices/" + this.get('device')._id + "/children";
 
-        this.set('childDevices', []);
-        this.set('loadChildDevices', true);
-
         $.ajax(url, {
           success: function(data) {
-            self.set('childDevices', data);
-            self.set('loadChildDevices', false);
+            //self.set('childDevices', data);
+            data.forEach(function(device) {
+              self.push('childDevices', device);
+            });
+          },
+
+          complete: function() {
+            self.set('loading', false);
           }
         });
       },
 
       hasFields: function(device) {
         if(device) {
-          return (!!device.macAddress || !!device.serialNumber ||
-                  !!device.manufacturer || !!device.model ||
+          var x = (!!device.macAddress || !!device.serialNumber ||
+                  !!device.manufacturer || !!device.modelNumber ||
                   !!device.companyTag || !!device.customFields.length);
+          return x;
         } else {
           return false;
         }
       },
 
+      hasDetails: function(device) {
+        return this.hasFields(device) && device.isContainer;
+      },
+
       getCardStyle: function(device) {
         var style = "";
-        if(device && device.color) {
-          style = "border: 1px solid " + device.color;
+        if(device.bgColor) {
+          style = "border: 2px solid " + device.bgColor;
         }
+        return style;
+      },
+
+      getHeadingStyle: function(device) {
+        var style = "";
+        if(device.fgColor) {
+          style += "color: " + device.fgColor + ';';
+        }
+
+        if(device.bgColor) {
+          style += "background-color: " + device.bgColor + ';';
+        }
+
         return style;
       },
 
