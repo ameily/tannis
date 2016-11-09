@@ -6,12 +6,14 @@ exports.Devices = [];
 
 var Workstation = new models.DeviceTemplate({
   name: "Workstation",
-  color: null, //TODO
 
   hasMacAddress: false,
   hasManufacturer: true,
   hasSerialNumber: true,
   hasCompanyTag: true,
+
+  bgColor: "#2e6da4",
+  fgColor: "#fff",
 
   isContainer: true
 });
@@ -19,12 +21,14 @@ exports.Templates.push(Workstation);
 
 var Server = new models.DeviceTemplate({
   name: "Server",
-  color: null, //TODO
+  bgColor: "#eea236",
+  fgColor: "#fff",
 
   hasMacAddress: false,
   hasManufacturer: true,
   hasSerialNumber: true,
   hasCompanyTag: true,
+
 
   isContainer: true
 });
@@ -32,12 +36,14 @@ exports.Templates.push(Server);
 
 var Laptop = new models.DeviceTemplate({
   name: "Laptop",
-  color: null, //TODO
 
   hasMacAddress: false,
   hasManufacturer: true,
   hasSerialNumber: true,
   hasCompanyTag: true,
+
+  bgColor: "#4cae4c",
+  fgColor: "#fff",
 
   isContainer: true
 });
@@ -45,7 +51,8 @@ exports.Templates.push(Laptop);
 
 var VirtualMachine = new models.DeviceTemplate({
   name: "Virtual Machine",
-  color: null, //TODO
+  bgColor: "#d43f3a",
+  fgColor: "#fff",
 
   hasMacAddress: true
 });
@@ -53,6 +60,8 @@ exports.Templates.push(VirtualMachine);
 
 var Switch = new models.DeviceTemplate({
   name: "Switch",
+  bgColor: "#9933cc",
+  fgColor: "#fff",
 
   hasManufacturer: true,
   hasSerialNumber: true,
@@ -62,6 +71,8 @@ exports.Templates.push(Switch);
 
 var Router = new models.DeviceTemplate({
   name: "Router",
+  bgColor: "#00bc8c",
+  fgColor: "#fff",
 
   hasManufacturer: true,
   hasSerialNumber: true,
@@ -71,6 +82,8 @@ exports.Templates.push(Router);
 
 var Monitor = new models.DeviceTemplate({
   name: "Monitor",
+  bgColor: "#375a7f",
+  fgColor: "#fff",
 
   hasManufacturer: true,
   hasCompanyTag: true
@@ -79,7 +92,8 @@ exports.Templates.push(Monitor);
 
 var NetworkCard = new models.DeviceTemplate({
   name: "Network Card",
-  color: null, //TODO
+  bgColor: "#2b3e50",
+  fgColor: "#fff",
 
   hasMacAddress: true
 });
@@ -87,6 +101,8 @@ exports.Templates.push(NetworkCard);
 
 var Container = new models.DeviceTemplate({
   name: "Container",
+  bgColor: "#464545",
+  fgColor: "#fff",
 
   isContainer: true
 });
@@ -94,58 +110,57 @@ exports.Templates.push(Container);
 
 var GenericTaggedDevice = new models.DeviceTemplate({
   name: "Generic Tagged Device",
+  bgColor: "#464545",
+  fgColor: "#fff",
 
   hasCompanyTag: true
 });
 exports.Templates.push(GenericTaggedDevice);
 
-var TestWorkstation = new models.Device({
+var TestWorkstation = models.Device.createFromTemplate(Workstation, {
   name: "Workstation",
-  templateId: Workstation._id,
-  ownerId: null,
-  parentId: null,
 
   manufacturer: "Dell",
   modelNumber: "Optiplex",
-  serialNumber: "ABCD-1234"
+  serialNumber: "81ba8019a",
+  companyTag: "ATM-1234"
 });
 exports.Devices.push(TestWorkstation);
 
-var WSNic = new models.Device({
+var WSNic = models.Device.createFromTemplate(NetworkCard, {
   name: "NIC Card",
-  templateId: NetworkCard._id,
-  ownerId: null,
   parentId: TestWorkstation._id,
   macAddress: "aa:bb:cc:dd:ee"
 });
 exports.Devices.push(WSNic);
 
-var WSMonitor = new models.Device({
+var WSMonitor = models.Device.createFromTemplate(Monitor, {
   name: "Monitor",
-  templateId: Monitor._id,
-  ownerId: null,
   parentId: TestWorkstation._id,
 
   manufacturer: "Dell",
   modelNumber: "XPS 21"
-})
+});
 exports.Devices.push(WSMonitor);
 
-var WSVM = new models.Device({
+var WSVM = models.Device.createFromTemplate(VirtualMachine, {
   name: "Windows VM",
-  templateId: VirtualMachine._id,
-  ownerId: null,
   parentId: TestWorkstation._id,
 
-  macAddress: "bb:cc:dd:ee:ff"
+  macAddress: "bb:cc:dd:ee:ff",
+  customFields: [{
+    name: "Windows Version",
+    value: "Windows XP SP2"
+  }, {
+    name: "Architecture",
+    value: "x86"
+  }]
 });
 exports.Devices.push(WSVM);
 
-var TestRouter = new models.Device({
-  name: "Router",
-  templateId: Router._id,
-  ownerId: null,
-  parentId: null
+var TestRouter = models.Device.createFromTemplate(Router, {
+  manufacturer: "TP-Link",
+  modelNumber: "Archer C7"
 });
 exports.Devices.push(TestRouter);
 
@@ -158,6 +173,8 @@ var initialize = exports.initialize = function() {
     console.log('insert: %d', i);
     if(i < items.length) {
       items[i].save(cb);
+    } else {
+      mongoose.disconnect();
     }
   }
 

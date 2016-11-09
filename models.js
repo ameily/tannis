@@ -8,7 +8,8 @@ exports.User = mongoose.model('users', UserSchema);
 
 var DeviceTemplateSchema = mongoose.Schema({
   name: String,
-  color: String,
+  fgColor: String,
+  bgColor: String,
   hasMacAddress: {
     type: Boolean,
     default: false
@@ -50,6 +51,9 @@ var DeviceSchema = mongoose.Schema({
   modelNumber: String,
   companyTag: String,
 
+  bgColor: String,
+  fgColor: String,
+
   isContainer: Boolean,
 
   customFields: [{
@@ -58,6 +62,35 @@ var DeviceSchema = mongoose.Schema({
   }],
   changelog: [Object]
 });
+
+DeviceSchema.statics.createFromTemplate = function(template, options) {
+  if(!options) {
+    options = {};
+  }
+
+  var device = new exports.Device({
+    name: options.name || template.name,
+    templateId: template._id,
+    ownerId: options.ownerId || null,
+    parentId: options.parentId || null,
+
+    macAddress: options.macAddress || null,
+    serialNumber: options.serialNumber || null,
+    modelNumber: options.modelNumber || null,
+    companyTag: options.companyTag || null,
+    manufacturer: options.manufacturer || null,
+
+    isContainer: template.isContainer,
+
+    bgColor: template.bgColor || options.bgColor,
+    fgColor: template.fgColor || options.fgColor,
+
+    customFields: options.customFields || []
+  });
+
+  return device;
+};
+
 exports.Device = mongoose.model('devices', DeviceSchema);
 
 
