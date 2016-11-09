@@ -5,15 +5,23 @@ block append head
 
   link(rel='import', href='/public/polymers/device-card.html')
 
+
+block sidebar
+  div.card.card-default
+    div.card-content
+      button.btn.btn-block.btn-success.btn-lg
+        span.glyphicon.glyphicon-plus-sign
+        | &nbsp;Add Device
+
 block content
   div.row
     div.col-md-12
-      h1 Device List
+      h1.page-title Device List
 
       div#device-list
 
 
-block footer
+block append footer
   script.
     $(document).ready(function() {
       $.ajax('/api/v1/devices', {

@@ -5,25 +5,36 @@ html
     link(rel='import', href='/bower_components/polymer/polymer.html')
     link(rel='stylesheet', href='/public/css/core.css')
     link(rel='import', href='/bower_components/paper-spinner/paper-spinner.html')
+    link(rel='stylesheet', href='/bower_components/jScrollPane/style/jquery.jscrollpane.css')
     block head
       title Tannis
 
   body
-    nav.navbar.navbar-default
-      div.container-fluid
+    nav.navbar.navbar-inverse#navbar
+      div.container
         div.navbar-header
           button.navbar-toggle.collapsed(data-toggle='collapse', data-target='#navbar-collapse')
             span.icon-bar
             span.icon-bar
             span.icon-bar
-          a.navbar-brand(href="/") Met&yuml;l
+          a.navbar-brand(href="/") Tannis
 
         div#navbar-collapse.collapse.navbar-collapse
           ul.nav.navbar-nav
+            li
+              a(href='/')
+                span.glyphicon.glyphicon-th-list
+                | &nbsp;My Devices
+            li
+              a(href='/search')
+                span.glyphicon.glyphicon-search
+                | &nbsp;Search
 
-    div.container-fluid
+    div.container
       block body
 
     script(src='/bower_components/jquery/dist/jquery.min.js')
+    script(src='/bower_components/jScrollPane/script/jquery.jscrollpane.min.js')
     script(src='/bower_components/bootstrap/dist/js/bootstrap.min.js')
+
     block footer

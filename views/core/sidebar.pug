@@ -4,10 +4,19 @@ block head
   style.
     #sidebar-pane, #content-pane {
       overflow-y: auto;
+      padding-top: 20px;
     }
 
     #sidebar-pane {
-      border-right: 1px solid #aaa;
+      /*border-right: 1px solid #aaa;*/
+    }
+
+    nav.navbar {
+      margin-bottom: 0px;
+    }
+
+    .page-title {
+      margin-top: 0px;
     }
 
 block body
@@ -21,12 +30,14 @@ block body
 block footer
   script.
     function onWindowResize() {
-      var height = $(window).height();
+      var height = $(window).height() - $("#navbar").outerHeight() - 20;
       $('#sidebar-pane').height(height);
       $('#content-pane').height(height);
+      console.log("Height %d", height);
     }
 
     $(document).ready(function() {
       $(window).resize(onWindowResize);
+      onWindowResize();
     });
 
