@@ -23,13 +23,31 @@ block content
 
 block append footer
   script.
+    function renderDevice(device) {
+      $.ajax('/api/v1/device-templates/' + device.templateId, {
+        success: function(template) {
+          var ele = document.createElement('device-card');
+          ele.device = device;
+          ele.template = template;
+          ele.unassignable = true;
+          $("#device-list").append(ele);
+
+          ele.addEventListener('unassign', function() {
+            $(ele.getRootElement()).fadeTo(400, 0.0, function() {
+              $(ele).slideUp(function() {
+                ele.parentNode.removeChild(ele);
+              });
+            });
+          });
+        }
+      });
+    }
+
     $(document).ready(function() {
       $.ajax('/api/v1/devices', {
         success: function(data) {
           data.forEach(function(device) {
-            var ele = document.createElement('device-card');
-            ele.device = device;
-            $("#device-list").append(ele);
+            renderDevice(device);
           });
         }
       })

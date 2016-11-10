@@ -1,7 +1,7 @@
 <dom-module id='device-card'>
   <template>
     <style>
-      .card-content.expandable {
+      .cursor-pointer {
         cursor: pointer;
       }
 
@@ -13,28 +13,61 @@
       .monospace {
         font-family: monospace;
       }
+
+      .card-option-btn {
+        margin-right: 15px;
+        vertical-align: top;
+      }
     </style>
 
 
-    <div class='card card-default' style$="{{getCardStyle(device)}}">
-      <div class$='card-content {{getHeadingClass(device)}}' on-tap="toggle" style$="{{getHeadingStyle(device)}}">
+    <div id='root-card' class='card card-default' style$="{{getCardStyle(template, device)}}">
+      <!--<div class$='card-content {{getHeadingClass(device)}}' on-tap="toggle" style$="{{getHeadingStyle(device)}}">
         <h3 class='card-title'>
           {{device.name}}
         </h3>
         <div hidden$="{{!owner}}">
           <a href$="{{getOwnerUrl(owner)}}">@{{owner}}</a>
         </div>
+      </div>-->
+      <div class='card-heading' style$="{{getHeadingStyle(template, device)}}">
+        <h3 class='card-title' on-tap="toggle">
+          <!--<button class='btn btn-default btn-xs' on-tap="fuck">
+            <span class='glyphicon glyphicon-option-vertical'></span>
+          </button>-->
+          <!--<span class='dropdown'>
+            <span class='dropdown-toggle card-option' data-toggle='dropdown' on-tap="ignoreTap" style$="{{getBtnStyle(template, device)}}">
+              <span class='glyphicon glyphicon-option-vertical'></span>
+            </span>
+            <ul class='dropdown-menu'>
+              <li>
+                <a href='javascript:void(0)' on-tap="unassign">Unassign</a>
+              </li>
+            </ul>
+          </span>-->
+          <!--<span class='btn-toolbar'>
+            <div class='btn-group'>-->
+          <template is='dom-if' if='{{unassignable}}'>
+            <span class='dropdown'>
+              <button class='btn btn-xs dropdown-toggle card-option-btn' style$="{{getBtnStyle(template, device)}}" data-toggle='dropdown' on-tap="ignoreTap">
+                <span class='glyphicon glyphicon-option-vertical'></span>
+              </button>
+              <ul class='dropdown-menu'>
+                <li>
+                  <a href='javascript:void(0)' on-tap="unassign">
+                    Unassign Device
+                  </a>
+                </li>
+              </ul>
+            </span>
+          </template>
+            <!--</div>
+          </span>-->
+          {{device.name}}
+        </h3>
       </div>
-      <div id='device-details' style='display: none'>
-        <!--<div class='card-content text-right'>
-          <div class='btn-group btn-group-xs'>
-            <a class='btn btn-danger' on-tap="{{unassign}}" href='javascript:void(0)'>
-              <span class='glyphicon glyphicon-remove-sign'></span>
-              Unassign
-            </a>
-          </div>
-        </div>-->
 
+      <div id='device-details' style='display: none'>
         <!-- Device fields (mac address, manufacturer, etc.) -->
         <table class='table table-hover' hidden$="{{!hasFields(device)}}">
           <tbody>
@@ -76,15 +109,12 @@
         <template is='dom-if' if="{{device.isContainer}}">
           <div class='card-divider' hidden$='{{!hasFields(device)}}'></div>
           <div class='card-content card-container'>
-            <!-- Child Devices -->
-            <h3 class='card-title' style='margin-bottom: 20px;'>Child Devices</h3>
-
             <div class='text-center'>
               <paper-spinner active="{{loading}}" hidden$="{{!loading}}"></paper-spinner>
             </div>
 
             <template is='dom-repeat' items="{{childDevices}}">
-              <device-card device="{{item}}" owner="{{owner}}"></device-card>
+              <device-card device="{{item.device}}" template="{{item.template}}" owner="{{owner}}"></device-card>
             </template>
             <button class='btn btn-block btn-default btn-lg' on-tap="{{addChildDevice}}">
               <span class='glyphicon glyphicon-plus-sign'></span>
@@ -101,6 +131,7 @@
       is: 'device-card',
       properties: {
         device: Object,
+        template: Object,
         active: Boolean,
         owner: {
           type: Object,
@@ -112,7 +143,31 @@
             return [];
           }
         },
+        unassignable: Boolean,
         loading: Boolean
+      },
+
+      ignoreTap: function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      },
+
+      unassign: function(e) {
+        var self = this;
+        this.ignoreTap(e);
+
+        $.ajax('/api/v1/devices/' + this.get('device')._id, {
+          method: 'DELETE',
+
+          success: function(data) {
+            self.fire('unassign');
+          }
+        })
+      },
+
+      getRootElement: function() {
+        return this.$['root-card'];
       },
 
       getOwnerUrl: function(owner) {
@@ -147,6 +202,18 @@
         this.set('active', !isActive);
       },
 
+      renderChildDevice: function(device) {
+        var self = this;
+        $.ajax('/api/v1/device-templates/' + device.templateId, {
+          success: function(template) {
+            self.push('childDevices', {
+              device: device,
+              template: template
+            });
+          }
+        })
+      },
+
       loadChildDevices: function() {
         var self = this;
         var url = "/api/v1/devices/" + this.get('device')._id + "/children";
@@ -155,7 +222,8 @@
           success: function(data) {
             //self.set('childDevices', data);
             data.forEach(function(device) {
-              self.push('childDevices', device);
+              //self.push('childDevices', device);
+              self.renderChildDevice(device);
             });
           },
 
@@ -180,22 +248,44 @@
         return this.hasFields(device) && device.isContainer;
       },
 
-      getCardStyle: function(device) {
+      getCardStyle: function(template, device) {
         var style = "";
-        if(device.bgColor) {
-          style = "border: 2px solid " + device.bgColor;
+        var bgColor = device.bgColor || template.bgColor;
+        if(bgColor) {
+          style = "border: 2px solid " + bgColor;
         }
         return style;
       },
 
-      getHeadingStyle: function(device) {
-        var style = "";
-        if(device.fgColor) {
-          style += "color: " + device.fgColor + ';';
+      getHeadingStyle: function(template, device) {
+        var style = "border: 0px;";
+        var bgColor = device.bgColor || template.bgColor;
+        var fgColor = device.fgColor || template.fgColor;
+        if(fgColor) {
+          style += "color: " + fgColor + ';';
         }
 
-        if(device.bgColor) {
-          style += "background-color: " + device.bgColor + ';';
+        if(bgColor) {
+          style += "background-color: " + bgColor + ';';
+        }
+
+        if(this.hasDetails(device)) {
+          style += "cursor: pointer;";
+        }
+
+        return style;
+      },
+
+      getBtnStyle: function(template, device) {
+        var style = "";
+        var bgColor = device.bgColor || template.bgColor;
+        var fgColor = device.fgColor || template.fgColor;
+        if(fgColor) {
+          style += "background-color: " + fgColor + ';';
+        }
+
+        if(bgColor) {
+          style += "color: " + bgColor + ';';
         }
 
         return style;

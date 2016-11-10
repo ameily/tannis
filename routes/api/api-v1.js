@@ -7,7 +7,7 @@ function getDevices(userId, deviceId, res) {
   var q = {};
 
   if(userId) {
-    q.ownerId = ObjectId(userId);
+    q.ownerId = new ObjectId(userId);
   }
 
   if(!res) {
@@ -16,7 +16,7 @@ function getDevices(userId, deviceId, res) {
   }
 
   if(deviceId) {
-    q.parentId = ObjectId(deviceId);
+    q.parentId = new ObjectId(deviceId);
   } else {
     q.parentId = null;
   }
@@ -34,8 +34,8 @@ function getDevice(userId, deviceId, res) {
   }
 
   //TODO only get current user's devices
-  models.Device.find({_id: ObjectId(deviceId)}, function(err, device) {
-    if(device && (!userId || ObjectId(userId) == device.ownerId)) {
+  models.Device.find({_id: new ObjectId(deviceId)}, function(err, device) {
+    if(device && (!userId || (new ObjectId(userId)) == device.ownerId)) {
       res.json(device);
     } else {
       res.status(404).end();
@@ -50,7 +50,7 @@ router.get('/device-templates', function(req, res) {
 });
 
 router.get('/device-templates/:templateId', function(req, res) {
-  models.DeviceTemplate.findOne({_id: ObjectId(req.param.templateId)}, function(err, template) {
+  models.DeviceTemplate.findOne({_id: new ObjectId(req.params.templateId)}, function(err, template) {
     res.json(template);
   })
 });
@@ -67,6 +67,20 @@ router.get('/devices/:deviceId', function(req, res) {
   getDevice(userId, req.params.deviceId, res);
 });
 
+router.delete('/devices/:deviceId', function(req, res) {
+  //TODO check ownership
+  models.Device.findOne({_id: new ObjectId(req.params.deviceId)}, function(err, device) {
+    if(!device) {
+      res.status(404).end();
+      return;
+    }
+
+    device.ownerId = null;
+    device.save();
+    res.status(204).end();
+  });
+})
+
 router.get('/devices/:deviceId/children', function(req, res) {
   //TODO only get current user's devices
   var userId = ""; //TODO current user id
@@ -82,7 +96,7 @@ router.get('/users', function(req, res) {
 
 router.get('/users/:userId', function(req, res) {
   // TODO admin only
-  models.User.findOne({_id: ObjectId(req.params.userId)}, function(err, user) {
+  models.User.findOne({_id: new ObjectId(req.params.userId)}, function(err, user) {
     if(user) {
       res.json(user);
     } else {
