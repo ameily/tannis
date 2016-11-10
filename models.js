@@ -63,6 +63,12 @@ var DeviceSchema = mongoose.Schema({
   changelog: [Object]
 });
 
+
+function nullOrEmpty(value, forceEmptyString) {
+  return value ? value : (forceEmptyString ? "" : null);
+}
+
+
 DeviceSchema.statics.createFromTemplate = function(template, options) {
   if(!options) {
     options = {};
@@ -74,16 +80,16 @@ DeviceSchema.statics.createFromTemplate = function(template, options) {
     ownerId: options.ownerId || null,
     parentId: options.parentId || null,
 
-    macAddress: options.macAddress || null,
-    serialNumber: options.serialNumber || null,
-    modelNumber: options.modelNumber || null,
-    companyTag: options.companyTag || null,
-    manufacturer: options.manufacturer || null,
+    macAddress: nullOrEmpty(options.macAddress, template.hasMacAddress),
+    serialNumber: nullOrEmpty(options.serialNumber, template.hasSerialNumber),
+    modelNumber: nullOrEmpty(options.modelNumber, template.hasManufacturer),
+    manufacturer: nullOrEmpty(options.manufacturer, template.hasManufacturer),
+    companyTag: nullOrEmpty(options.companyTag, template.hasCompanyTag),
 
     isContainer: template.isContainer,
 
-    bgColor: template.bgColor || options.bgColor,
-    fgColor: template.fgColor || options.fgColor,
+    bgColor: options.bgColor || null,
+    fgColor: options.fgColor || null,
 
     customFields: options.customFields || []
   });
