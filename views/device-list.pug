@@ -20,6 +20,13 @@ block content
 
       div#device-list
 
+  div.row
+    div.col-md-12
+      div.card.card-default
+        div.card-heading
+          h3.card-title New Device
+        div.card-content#new-device
+
 
 block append footer
   script.
@@ -29,7 +36,7 @@ block append footer
           var ele = document.createElement('device-card');
           ele.device = device;
           ele.template = template;
-          ele.unassignable = true;
+          ele.editable = true;
           $("#device-list").append(ele);
 
           ele.addEventListener('unassign', function() {
@@ -50,5 +57,5 @@ block append footer
             renderDevice(device);
           });
         }
-      })
+      });
     });
