@@ -33,6 +33,7 @@ var DeviceTemplateSchema = mongoose.Schema({
 
   customFields: [{
     name: String,
+    value: String,
     isRequired: Boolean,
     regexPattern: String
   }]
@@ -98,6 +99,16 @@ DeviceSchema.statics.createFromTemplate = function(template, options) {
 };
 
 exports.Device = mongoose.model('devices', DeviceSchema);
+
+
+var TannisConfig = mongoose.Schema({
+  companyTags: [{
+    regex: String,
+    fgColor: String,
+    bgColor: String
+  }]
+});
+
 
 
 /*
