@@ -1,0 +1,325 @@
+<dom-module id='device-form'>
+  <link rel='import' href='/bower_components/paper-input/paper-input.html'>
+  <link rel='import' href='/bower_components/paper-listbox/paper-listbox.html'>
+  <link rel='import' href='/bower_components/paper-item/paper-item.html'>
+  <link rel='import' href='/bower_components/paper-dropdown-menu/paper-dropdown-menu.html'>
+  <template>
+    <div>
+      <template is='dom-if' if="{{newDevice}}">
+        <paper-dropdown-menu noink no-animations label='Template'>
+          <paper-listbox class='dropdown-content' on-iron-select="changeTemplate">
+            <template is='dom-repeat' items="{{availableTemplates}}">
+              <paper-item data-template-id$="{{item._id}}">{{item.name}}</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+      </template>
+
+      <paper-input label='Device Name' required auto-validate pattern="\s*\S.*" value="{{device.name}}"></paper-input>
+
+      <template is='dom-if' if="{{template.hasManufacturer}}" restamp>
+        <paper-input label='Manufacturer' required auto-validate pattern='\s*\S.*' value="{{device.manufacturer}}"></paper-input>
+        <paper-input label='Model Number' required auto-validate pattern='\s*\S.*' value="{{device.modelNumber}}"></paper-input>
+      </template>
+
+      <template is='dom-if' if='{{template.hasSerialNumber}}' restamp>
+        <paper-input label='Serial Number' required auto-validate pattern='\s*\S.*' value="{{device.serialNumber}}"></paper-input>
+      </template>
+
+      <template is='dom-if' if="{{template.hasMacAddress}}" restamp>
+        <paper-input label='MAC Address' required auto-validate pattern='\s*([a-fA-F0-9][a-fA-F0-9][\s:\-]*){6}' value="{{device.macAddress}}"></paper-input>
+      </template>
+
+      <template is='dom-if' if='{{template.hasCompanyTag}}' restamp>
+        <paper-input label='Company Tag' required auto-validate pattern='\s*\S.*' value="{{device.companyTag}}"></paper-input>
+      </template>
+
+      <template is='dom-if' if="{{device.customFields.length}}" restamp>
+        <template is='dom-repeat' items="{{device.customFields}}">
+          <paper-input label="{{item.name}}" required="{{item.template.isRequired}}" pattern="{{item.regex}}" auto-validate value="{{item.value}}"></paper-input>
+        </template>
+      </template>
+
+      <div class='text-right'>
+        <a href='javascript:void(0)' on-tap='cancel' class='btn btn-warning'>
+          <span class='glyphicon glyphicon-remove'></span>
+          Cancel
+        </a>
+        <a href='javascript:void(0)' on-tap='submit' class='btn btn-success'>
+          <span class='glyphicon glyphicon-ok'></span>
+          Save
+        </a>
+      </div>
+    </div>
+    <!--<form class='form-horizontal'>
+      <div class$='form-group {{getNameCssClass(device)}}'>
+        <label class='control-label col-md-4'>Device Name</label>
+        <div class='col-md-8'>
+          <input type='text' class='form-control'>
+        </div>
+      </div>
+
+      <template is='dom-if' if="{{template.hasManufacturer}}">
+        <div class$='form-group {{getManufacturerCssClass(device)}}'>
+          <label class='control-label col-md-4'>Manufacturer</label>
+          <div class='col-md-8'>
+            <input type='text' class='form-control'>
+          </div>
+        </div>
+
+        <div class$='form-group {{getModelNumberCssClass(device)}}'>
+          <label class='control-label col-md-4'>Model Number</label>
+          <div class='col-md-8'>
+            <input type='text' class='form-control'>
+          </div>
+        </div>
+      </template>
+
+      <template is='dom-if' if='{{template.hasSerialNumber}}'>
+        <div class$='form-group {{getSerialNumberCssClass(device)}}'>
+          <label class='control-label col-md-4'>Serial Number</label>
+          <div class='col-md-8'>
+            <input type='text' class='form-control'>
+          </div>
+        </div>
+      </template>
+
+      <template is='dom-if' if="{{template.hasMacAddress}}">
+        <div class$='form-group {{getMacAddressCssClass(device)}}'>
+          <label class='control-label col-md-4'>MAC Address</label>
+          <div class='col-md-8'>
+            <input type='text' class='form-control'>
+          </div>
+          <span class='help-block'>
+            <p>MAC Address can be specified in any of the following formats:</p>
+            <ul>
+              <li>AA:BB:CC:DD:EE:FF</li>
+              <li>AA-BB-CC-DD-EE-FF</li>
+              <li>AABBCCDDEEFF</li>
+              <li>AA BB CC DD EE FF</li>
+            </ul>
+          </span>
+        </div>
+      </template>
+
+      <template is='dom-if' if='{{template.hasCompanyTag}}'>
+        <div class$='form-group {{getCompanyTagCssClass(device)}}'>
+          <label class='control-label col-md-4'>Company Tag</label>
+          <div class='col-md-8'>
+            <input type='text' class='form-control'>
+          </div>
+        </div>
+      </template>
+
+      <template is='dom-if' if="{{device.customFields.length}}">
+        <hr>
+        <template is='dom-repeat' items="{{device.customFields}}">
+          <div class$='form-group {{getCustomFieldCssClass(item)}}'>
+            <label class='control-label col-md-4'>{{item.name}}</label>
+            <div class='col-md-8'>
+              <input type='text' class='form-control'>
+            </div>
+          </div>
+        </template>
+      </template>
+    </form>-->
+  </template>
+
+  <script>
+    Polymer({
+      is: 'device-form',
+
+      properties: {
+        device: Object,
+        template: Object,
+        newDevice: Boolean,
+        availableTemplates: Array
+      },
+
+      changeTemplate: function(evt) {
+        var templateId = evt.target.selectedItem.dataset.templateId;
+        var template = null;
+        this.get('availableTemplates').forEach(function(tpl) {
+          if(tpl._id == templateId) {
+            template = tpl;
+          }
+        });
+
+        if(template) {
+          this.set('template', template);
+          this.set('device', {customFields: []});
+          this.populateDevice();
+        }
+      },
+
+      populateDevice: function() {
+        var self = this;
+        var device = this.get('device');
+        var template = this.get('template');
+
+        if(template.hasManufacturer) {
+          if(!device.modelNumber) {
+            this.set('device.modelNumber', '');
+          }
+
+          if(!device.manufacturer) {
+            this.set('device.manufacturer', '');
+          }
+        }
+
+        if(template.hasMacAddress && !device.macAddress) {
+          this.set('device.macAddress', '');
+        }
+
+        if(template.hasSerialNumber && !device.serialNumber) {
+          this.set('device.serialNumber', '');
+        }
+
+        if(template.hasCompanyTag && !device.companyTag) {
+          this.set('device.companyTag', '');
+        }
+
+        if(!device.customFields) {
+          this.set('device.customFields', []);
+        }
+
+        if(this.get('newDevice')) {
+          $.ajax('/api/v1/device-templates', {
+            success: function(templates) {
+              self.set('availableTemplates', templates);
+            }
+          })
+        }
+
+        template.customFields.forEach(function(templateField) {
+          var found = false;
+          device.customFields.forEach(function(deviceField, i) {
+            if(deviceField.name == templateField.name) {
+              found = true;
+              //deviceField.template = templateField;
+              self.set('device.customFields.' + i.toString() + '.template', templateField);
+            }
+          });
+
+          if(!found) {
+            self.push('device.customFields', {
+              name: templateField.name,
+              value: templateField.value || '',
+              template: templateField
+            });
+          }
+        });
+      },
+
+      attached: function() {
+        this.populateDevice();
+      },
+
+      cancel: function() {
+        this.fire('cancel');
+      },
+
+      submit: function() {
+        var valid = true;
+        Polymer.dom(this.root).querySelectorAll('paper-input').forEach(function(ele) {
+          valid = ele.validate() && valid;
+        });
+
+        if(!valid) {
+          console.log("form has errors");
+          return;
+        } else {
+          var device = $.extend(true, {}, this.get('device'));
+          device.customFields.forEach(function(field) {
+            delete field.template;
+          });
+
+          var url = '/api/v1/devices';
+          if(device._id) {
+            url += '/' + device._id;
+          }
+
+          $.ajax(url, {
+            method: 'POST',
+            data: device,
+            dataType: 'json',
+
+            success: function(data) {
+              self.fire('save', data);
+            },
+
+            error: function() {
+              //TODO
+            }
+          });
+        }
+      },
+
+      isEmptyString: function(value) {
+        return !value || !value.length || !value.trim().length;
+      },
+
+      getNameCssClass: function(device) {
+        return this.isEmptyString(device.name) ? "has-error" : "has-success";
+      },
+
+      getMacAddressCssClass: function(device) {
+        if(this.isEmptyString(device.macAddress)) {
+          return "has-error";
+        }
+
+        var mac = device.macAddress.replace('-', '').replace(':', '').replace(' ', '');
+        if(mac.length != 12) {
+          return "has-error";
+        }
+
+        var valid = true;
+        for(var i = 0; i < mac.length; ++i) {
+          if('abcdefABCDEF0123456789'.indexOf(mac[i]) < 0) {
+            valid = false;
+            break;
+          }
+        }
+
+        return valid ? "has-success" : "has-error";
+      },
+
+      getManufacturerCssClass: function(device) {
+        return this.isEmptyString(device.manufacturer) ? "has-error" : "has-success";
+      },
+
+      getModelNumberCssClass: function(device) {
+        return this.isEmptyString(device.modelNumber) ? "has-error" : "has-success";
+      },
+
+      getSerialNumberCssClass: function(device) {
+        return this.isEmptyString(device.serialNumber) ? "has-error" : "has-success";
+      },
+
+      getCompanyTagCssClass: function(device) {
+        return this.isEmptyString(device.companyTag) ? "has-error" : "has-success";
+      },
+
+      getCustomFieldCssClass: function(customField) {
+        if(!customField.template) {
+          return "";
+        }
+
+        var isEmpty = this.isEmptyString(customField.value);
+        if(customField.template.isRequired && isEmpty) {
+          return "has-error";
+        } else if(isEmpty) {
+          return "";
+        }
+
+        if(customField.template.regex) {
+          if(!customField.value.match(customField.template.regex)) {
+            return "has-errpr";
+          }
+        }
+
+        return "has-success";
+      }
+    })
+  </script>
+</dom-module>
