@@ -1,4 +1,5 @@
 <dom-module id='device-card'>
+  <link rel='import' href='/public/polymers/device-form.html'>
   <template>
     <style>
       .cursor-pointer {
@@ -32,29 +33,22 @@
       </div>-->
       <div class='card-heading' style$="{{getHeadingStyle(template, device)}}">
         <h3 class='card-title' on-tap="toggle">
-          <!--<button class='btn btn-default btn-xs' on-tap="fuck">
-            <span class='glyphicon glyphicon-option-vertical'></span>
-          </button>-->
-          <!--<span class='dropdown'>
-            <span class='dropdown-toggle card-option' data-toggle='dropdown' on-tap="ignoreTap" style$="{{getBtnStyle(template, device)}}">
-              <span class='glyphicon glyphicon-option-vertical'></span>
-            </span>
-            <ul class='dropdown-menu'>
-              <li>
-                <a href='javascript:void(0)' on-tap="unassign">Unassign</a>
-              </li>
-            </ul>
-          </span>-->
-          <!--<span class='btn-toolbar'>
-            <div class='btn-group'>-->
-          <template is='dom-if' if='{{unassignable}}'>
+          <template is='dom-if' if='{{editable}}'>
             <span class='dropdown'>
               <button class='btn btn-xs dropdown-toggle card-option-btn' style$="{{getBtnStyle(template, device)}}" data-toggle='dropdown' on-tap="ignoreTap">
                 <span class='glyphicon glyphicon-option-vertical'></span>
               </button>
               <ul class='dropdown-menu'>
                 <li>
+                  <a href='javascript:void(0)' on-tap="edit">
+                    <span class='glyphicon glyphicon-pencil'></span>
+                    Edit Device
+                  </a>
+                </li>
+                <li class='divider'></li>
+                <li>
                   <a href='javascript:void(0)' on-tap="unassign">
+                    <span class='glyphicon glyphicon-remove'></span>
                     Unassign Device
                   </a>
                 </li>
@@ -66,6 +60,10 @@
           {{device.name}}
         </h3>
       </div>
+
+      <template is='dom-if' if="{{editable}}">
+        <div class='card-content' style='display: none' id='edit-form'></div>
+      </template>
 
       <div id='device-details' style='display: none'>
         <!-- Device fields (mac address, manufacturer, etc.) -->
@@ -114,9 +112,12 @@
             </div>
 
             <template is='dom-repeat' items="{{childDevices}}">
-              <device-card device="{{item.device}}" template="{{item.template}}" owner="{{owner}}"></device-card>
+              <device-card device="{{item.device}}" template="{{item.template}}" owner="{{owner}}" editable="{{editable}}"></device-card>
             </template>
-            <button class='btn btn-block btn-default btn-lg' on-tap="{{addChildDevice}}">
+
+            <div id='new-device-form'></div>
+
+            <button class='btn btn-block btn-default btn-lg' on-tap="addChildDevice">
               <span class='glyphicon glyphicon-plus-sign'></span>
               Add Child Device
             </button>
@@ -143,7 +144,8 @@
             return [];
           }
         },
-        unassignable: Boolean,
+        editable: Boolean,
+        editing: Boolean,
         loading: Boolean
       },
 
@@ -164,6 +166,38 @@
             self.fire('unassign');
           }
         })
+      },
+
+      edit: function(e) {
+        var self = this;
+        var device = $.extend(true, {}, this.get('device'));
+        var form = document.createElement('device-form');
+        var container = this.$$('#edit-form');
+
+        this.ignoreTap(e);
+
+        form.device = device;
+        form.template = this.get('template');
+
+        this.set('editing', true);
+
+        Polymer.dom(container).appendChild(form);
+        $(container).slideDown();
+
+        form.addEventListener('save', function(device) {
+          self.set('device', device);
+          this.set('editing', false);
+          $(container).slideUp(400, function() {
+            Polymer.dom(container).removeChild(form);
+          })
+        });
+
+        form.addEventListener('cancel', function() {
+          this.set('editing', false);
+          $(container).slideUp(400, function() {
+            Polymer.dom(container).removeChild(form);
+          })
+        });
       },
 
       getRootElement: function() {
@@ -292,6 +326,26 @@
       },
 
       addChildDevice: function() {
+        var container = this.$$('#new-device-form');
+        var block = document.createElement('div');
+        var form = document.createElement('device-form');
+
+        form.device = {};
+        form.template = {customFields: []};
+        form.newDevice = true;
+
+        block.setAttribute('style', 'display: none; margin-bottom: 20px;');
+        block.appendChild(form);
+
+        Polymer.dom(container).appendChild(block);
+
+        $(block).slideDown();
+
+        form.addEventListener('cancel', function() {
+          $(block).slideUp(400, function() {
+            Polymer.dom(container).removeChild(block);
+          })
+        });
       }
     })
   </script>
