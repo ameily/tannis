@@ -103,6 +103,7 @@ exports.Device = mongoose.model('devices', DeviceSchema);
 
 var TannisConfig = mongoose.Schema({
   companyTags: [{
+    name: String,
     regex: String,
     fgColor: String,
     bgColor: String
