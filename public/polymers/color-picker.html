@@ -1,0 +1,113 @@
+<dom-module id='color-picker'>
+  <link rel='import' href='/bower_components/paper-input/paper-input.html'>
+  <template>
+    <style>
+      .color-choicesss {
+        margin: 5px 0px;
+      }
+
+      .color-choice {
+        width: 20px;
+        display: inline-block;
+      }
+
+      .color-col {
+        margin-top: 20px;
+      }
+
+      .btn-color {
+        display: block;
+        width: 100%;
+      }
+
+      .selected-color-value {
+        width: 80px;
+        height: 2ch;
+        border-radius: 4px;
+      }
+
+      .selected-color {
+        padding: 6px 10px;
+        border-radius: 4px;
+        border: 1px solid #aaa;
+        display: inline-block;
+      }
+
+      .color-preview {
+        font-size: 200%;
+        margin-right: 10px;
+        padding-right: 1px;
+        border: 1px solid #ccc;
+      }
+    </style>
+
+    <!--<paper-dropdown-menu noink no-animations label='{{label}}'>
+      <paper-listbox class='dropdown-content'>
+        <template is='dom-repeat' items="{{choices}}">
+          <paper-item class='color-choice' style$="background-color: {{item}}">{{item}}</paper-item>
+        </template>
+      </paper-listbox>
+    </paper-dropdown-menu>-->
+    <div class='container-fluid'>
+      <paper-input label="[[label]]" pattern="#[0-9a-fA-F]{6}" auto-validate value="{{value}}" required="[[required]]">
+        <div prefix class='color-preview' hidden$="{{!isValidColor(value)}}">
+          <span class='glyphicon glyphicon-stop' style$="color: {{value}}"></span>
+        </div>
+      </paper-input>
+
+      <div class='row'>
+        <template is='dom-repeat' items='{{choices}}'>
+          <!--<div class='col-md-1' class='text-center'>
+            <div class='color-choice' style='background-color: {{item}}'></div>
+          </div>-->
+          <div class='col-sm-2 col-md-2 col-lg-1 color-col'>
+            <button data-color$="{{item}}" class='btn btn-default btn-colorss' on-tap="toggle">
+              <div style="background-color: {{item}}; width: 30px; height: 30px; border-radius: 4px">&nbsp;</div>
+            </button>
+          </div>
+        </template>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'color-picker',
+
+      properties: {
+        value: String,
+        label: String,
+        required: Boolean,
+        valid: {
+          type: Boolean,
+          computed: "isValidColor(value)"
+        },
+        choices: {
+          type: Array,
+          value: function() {
+            return [
+              "#1f77b4", "#aec7e8", "#ff7f0e", "#ffbb78",
+              "#2ca02c", "#98df8a", "#d62728", "#ff9896",
+              "#9467bd", "#c5b0d5", "#8c564b", "#c49c94",
+              "#e377c2", "#f7b6d2", "#7f7f7f", "#c7c7c7",
+              "#bcbd22", "#dbdb8d", "#17becf", "#9edae5",
+              "#ffffff", "#000000"
+            ];
+          }
+        }
+      },
+
+      toggle: function(e) {
+        this.set('value', e.currentTarget.dataset.color);
+      },
+
+      isValidColor: function(color) {
+        return color && color.match("^#[0-9a-fA-F]{6}$") ? true : false;
+      },
+
+      onChange: function(color) {
+        console.log("change: %s", color);
+      }
+    })
+  </script>
+</dom-module>
